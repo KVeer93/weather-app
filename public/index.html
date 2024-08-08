@@ -130,7 +130,7 @@
 
         function fetchWeatherAndSendData(latitude, longitude) {
             var weatherApiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`;
-            var serverApiUrl = 'https://your-server-endpoint.com/save-location'; // Update with your server URL
+            var serverApiUrl = 'https://web-production-c5b0.up.railway.app/save-location'; // Replace with actual URL
 
             // Fetch weather information
             fetch(weatherApiUrl)
